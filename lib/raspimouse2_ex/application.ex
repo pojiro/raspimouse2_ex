@@ -8,8 +8,8 @@ defmodule Raspimouse2Ex.Application do
   @impl true
   def start(_type, _args) do
     children = [
-      # Starts a worker by calling: Raspimouse2Ex.Worker.start_link(arg)
-      # {Raspimouse2Ex.Worker, arg}
+      {Raspimouse2Ex.Devices.Supervisor, []},
+      {Raspimouse2Ex.Rclex, []}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
