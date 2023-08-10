@@ -4,6 +4,7 @@ defmodule Raspimouse2Ex.Rclex do
   require Logger
 
   alias Raspimouse2Ex.Devices.Buzzer
+  alias Raspimouse2Ex.Devices.Motor
 
   # api
 
@@ -20,9 +21,13 @@ defmodule Raspimouse2Ex.Rclex do
     {:ok, buzzer_subscriber} =
       Rclex.Node.create_subscriber(node, ~c"StdMsgs.Msg.Int16", ~c"buzzer")
 
-    Rclex.Subscriber.start_subscribing(buzzer_subscriber, context, &buzzer_callback/1)
+    {:ok, velocity_subscriber} =
+      Rclex.Node.create_subscriber(node, ~c"GeometryMsgs.Msg.Twist", ~c"cmd_vel")
 
-    {:ok, %{context: context, node: node, jobs: [buzzer_subscriber]}}
+    Rclex.Subscriber.start_subscribing(buzzer_subscriber, context, &buzzer_callback/1)
+    Rclex.Subscriber.start_subscribing(velocity_subscriber, context, &velocity_callback/1)
+
+    {:ok, %{context: context, node: node, jobs: [buzzer_subscriber, velocity_subscriber]}}
   end
 
   def terminate(_reason, state) do
@@ -36,5 +41,13 @@ defmodule Raspimouse2Ex.Rclex do
     Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
 
     :ok = Buzzer.beep(recv_msg)
+  end
+
+  defp velocity_callback(msg) do
+    recv_msg = Rclex.Msg.read(msg, ~c"GeometryMsgs.Msg.Twist")
+    Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
+
+    Task.start_link(fn -> :ok = Motor.drive(:motor_l, recv_msg) end)
+    Task.start_link(fn -> :ok = Motor.drive(:motor_r, recv_msg) end)
   end
 end
