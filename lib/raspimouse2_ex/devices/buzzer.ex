@@ -9,27 +9,28 @@ defmodule Raspimouse2Ex.Devices.Buzzer do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
-  @spec beep(integer()) :: :ok
-  def beep(hz) when is_integer(hz) and hz >= 0 and hz <= 20000 do
+  @spec beep(msg :: map()) :: :ok
+  def beep(%{data: hz} = _msg) do
     GenServer.call(__MODULE__, {:beep, hz})
   end
 
   # callbacks
 
-  def init(_args) do
+  def init(args) do
     Process.flag(:trap_exit, true)
 
-    buzzer = "/dev/rtbuzzer0"
+    dev_buzzer = Keyword.fetch!(args, :device_file_path)
     dev_null = "/dev/null"
 
-    device_file =
-      if File.exists?(buzzer) do
-        File.open!(buzzer, [:write])
+    device =
+      if File.exists?(dev_buzzer) do
+        File.open!(dev_buzzer, [:write])
       else
         File.open!(dev_null, [:write])
       end
+      |> tap(&IO.write(&1, "0"))
 
-    {:ok, %{device: device_file}}
+    {:ok, %{device: device}}
   end
 
   def terminate(reason, state) do
@@ -40,7 +41,13 @@ defmodule Raspimouse2Ex.Devices.Buzzer do
   end
 
   def handle_call({:beep, hz}, _from, state) do
-    :ok = IO.write(state.device, "#{hz}")
+    with true <- is_integer(hz),
+         true <- hz >= 0 and hz <= 20000 do
+      IO.write(state.device, "#{hz}")
+    else
+      _ -> raise BadArityError
+    end
+
     {:reply, :ok, state}
   end
 end

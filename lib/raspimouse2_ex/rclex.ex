@@ -35,6 +35,6 @@ defmodule Raspimouse2Ex.Rclex do
     recv_msg = Rclex.Msg.read(msg, ~c"StdMsgs.Msg.Int16")
     Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
 
-    :ok = Buzzer.beep(recv_msg.data)
+    :ok = Buzzer.beep(recv_msg)
   end
 end

@@ -10,7 +10,7 @@ defmodule Raspimouse2Ex.Devices.Supervisor do
   @impl true
   def init(_args) do
     children = [
-      {Buzzer, []}
+      {Buzzer, [device_file_path: "/dev/rtbuzzer0"]}
     ]
 
     Supervisor.init(children, strategy: :one_for_one)
