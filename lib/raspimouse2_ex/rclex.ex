@@ -55,12 +55,13 @@ defmodule Raspimouse2Ex.Rclex do
   def handle_call({:publish_light_sensors, values}, _from, state) do
     [forward_r, right, left, forward_l] = values
 
-    msg_struct = %Rclex.RaspimouseMsgs.Msg.LightSensors{
-      forward_r: forward_r,
-      forward_l: forward_l,
-      left: left,
-      right: right
-    }
+    msg_struct =
+      struct(Rclex.RaspimouseMsgs.Msg.LightSensors, %{
+        forward_r: forward_r,
+        forward_l: forward_l,
+        left: left,
+        right: right
+      })
 
     Rclex.Msg.set(state.light_sensors_msg, msg_struct, ~c"RaspimouseMsgs.Msg.LightSensors")
 
