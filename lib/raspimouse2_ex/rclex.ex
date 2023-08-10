@@ -5,6 +5,7 @@ defmodule Raspimouse2Ex.Rclex do
 
   alias Raspimouse2Ex.Devices.Buzzer
   alias Raspimouse2Ex.Devices.Motor
+  alias Raspimouse2Ex.Devices.MotorEnabler
 
   # api
 
@@ -46,6 +47,8 @@ defmodule Raspimouse2Ex.Rclex do
   defp velocity_callback(msg) do
     recv_msg = Rclex.Msg.read(msg, ~c"GeometryMsgs.Msg.Twist")
     Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
+
+    :ok = MotorEnabler.enable(recv_msg)
 
     Task.start_link(fn -> :ok = Motor.drive(:motor_l, recv_msg) end)
     Task.start_link(fn -> :ok = Motor.drive(:motor_r, recv_msg) end)
