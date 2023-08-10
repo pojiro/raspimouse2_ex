@@ -13,6 +13,11 @@ defmodule Raspimouse2Ex.Rclex do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
+  @spec publish_light_sensors(values :: list()) :: :ok
+  def publish_light_sensors(values) do
+    GenServer.call(__MODULE__, {:publish_light_sensors, values})
+  end
+
   # callbacks
 
   def init(_args) do
@@ -28,13 +33,40 @@ defmodule Raspimouse2Ex.Rclex do
     Rclex.Subscriber.start_subscribing(buzzer_subscriber, context, &buzzer_callback/1)
     Rclex.Subscriber.start_subscribing(velocity_subscriber, context, &velocity_callback/1)
 
-    {:ok, %{context: context, node: node, jobs: [buzzer_subscriber, velocity_subscriber]}}
+    {:ok, light_sensors_publisher} =
+      Rclex.Node.create_publisher(node, ~c"RaspimouseMsgs.Msg.LightSensors", ~c"light_sensors")
+
+    {:ok,
+     %{
+       context: context,
+       node: node,
+       jobs: [light_sensors_publisher, buzzer_subscriber, velocity_subscriber],
+       light_sensors_publisher: light_sensors_publisher,
+       light_sensors_msg: Rclex.Msg.initialize(~c"RaspimouseMsgs.Msg.LightSensors")
+     }}
   end
 
   def terminate(_reason, state) do
     Rclex.Node.finish_jobs(state.jobs)
     Rclex.ResourceServer.finish_node(state.node)
     Rclex.shutdown(state.context)
+  end
+
+  def handle_call({:publish_light_sensors, values}, _from, state) do
+    [forward_r, right, left, forward_l] = values
+
+    msg_struct = %Rclex.RaspimouseMsgs.Msg.LightSensors{
+      forward_r: forward_r,
+      forward_l: forward_l,
+      left: left,
+      right: right
+    }
+
+    Rclex.Msg.set(state.light_sensors_msg, msg_struct, ~c"RaspimouseMsgs.Msg.LightSensors")
+
+    :ok = Rclex.Publisher.publish([state.light_sensors_publisher], [state.light_sensors_msg])
+
+    {:reply, :ok, state}
   end
 
   defp buzzer_callback(msg) do
