@@ -1,6 +1,6 @@
 # Raspimouse2Ex
 
-**TODO: Add description**
+Elixir implementation of [rt-net/raspimouse2](https://github.com/rt-net/raspimouse2)
 
 ## Installation
 
@@ -10,7 +10,7 @@ by adding `raspimouse2_ex` to your list of dependencies in `mix.exs`:
 ```elixir
 def deps do
   [
-    {:raspimouse2_ex, "~> 0.1.0"}
+    {:raspimouse2_ex, git: "https://github.com/pojiro/raspimouse2_ex.git"}
   ]
 end
 ```
@@ -18,4 +18,3 @@ end
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
 be found at <https://hexdocs.pm/raspimouse2_ex>.
-
