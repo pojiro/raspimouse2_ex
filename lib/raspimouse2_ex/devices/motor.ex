@@ -18,6 +18,11 @@ defmodule Raspimouse2Ex.Devices.Motor do
     GenServer.call(motor_name, {:drive, {x, z}})
   end
 
+  @spec get_state(motor_name :: atom()) :: map()
+  def get_state(motor_name) do
+    GenServer.call(motor_name, :get_state)
+  end
+
   # callbacks
 
   def init(args) do
@@ -35,7 +40,7 @@ defmodule Raspimouse2Ex.Devices.Motor do
       end
       |> tap(&IO.write(&1, "0"))
 
-    {:ok, %{device: device, coeff: coeff}}
+    {:ok, %{device: device, coeff: coeff, velocity: 0, pwm_hz: 0}}
   end
 
   def terminate(reason, state) do
@@ -58,6 +63,10 @@ defmodule Raspimouse2Ex.Devices.Motor do
       _ -> raise BadArityError
     end
 
-    {:reply, :ok, state}
+    {:reply, :ok, %{state | velocity: velocity, pwm_hz: pwm_hz}}
+  end
+
+  def handle_call(:get_state, _from, state) do
+    {:reply, state, state}
   end
 end
