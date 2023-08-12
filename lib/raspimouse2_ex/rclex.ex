@@ -81,7 +81,7 @@ defmodule Raspimouse2Ex.Rclex do
     recv_msg = Rclex.Msg.read(msg, ~c"GeometryMsgs.Msg.Twist")
     Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
 
-    :ok = MotorEnabler.enable(recv_msg)
+    :ok = MotorEnabler.enable()
 
     Task.start_link(fn -> :ok = Motor.drive(:motor_l, recv_msg) end)
     Task.start_link(fn -> :ok = Motor.drive(:motor_r, recv_msg) end)
