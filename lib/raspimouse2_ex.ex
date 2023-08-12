@@ -17,4 +17,9 @@ defmodule Raspimouse2Ex do
   def get_right_motor_state() do
     Raspimouse2Ex.Devices.Motor.get_state(:motor_r)
   end
+
+  @spec get_light_sensors_values() :: map()
+  def get_light_sensors_values() do
+    Raspimouse2Ex.Devices.LightSensors.get_values()
+  end
 end
