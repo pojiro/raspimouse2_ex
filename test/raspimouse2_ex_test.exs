@@ -2,6 +2,7 @@ defmodule Raspimouse2ExTest do
   use ExUnit.Case
 
   test "is_motor_enable?/0 return false" do
+    Raspimouse2Ex.Devices.MotorEnabler.disable()
     assert Raspimouse2Ex.is_motor_enable?() == false
   end
 

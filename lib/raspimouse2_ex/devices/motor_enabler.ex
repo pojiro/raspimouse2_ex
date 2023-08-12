@@ -16,6 +16,11 @@ defmodule Raspimouse2Ex.Devices.MotorEnabler do
     GenServer.call(__MODULE__, :enable)
   end
 
+  @spec disable() :: :ok
+  def disable() do
+    GenServer.call(__MODULE__, :disable)
+  end
+
   @spec enable?() :: boolean()
   def enable?() do
     GenServer.call(__MODULE__, :enable?)
@@ -50,6 +55,11 @@ defmodule Raspimouse2Ex.Devices.MotorEnabler do
   def handle_call(:enable, _from, state) do
     IO.write(state.device, "1")
     {:reply, :ok, %{state | enable?: true}, @timeout_ms}
+  end
+
+  def handle_call(:disable, _from, state) do
+    IO.write(state.device, "0")
+    {:reply, :ok, %{state | enable?: false}, @timeout_ms}
   end
 
   def handle_call(:enable?, _from, state) do
