@@ -14,6 +14,11 @@ defmodule Raspimouse2Ex.Devices.Buzzer do
     GenServer.call(__MODULE__, {:beep, hz})
   end
 
+  @spec get_tone() :: integer()
+  def get_tone() do
+    GenServer.call(__MODULE__, :get_tone)
+  end
+
   # callbacks
 
   def init(args) do
@@ -30,7 +35,7 @@ defmodule Raspimouse2Ex.Devices.Buzzer do
       end
       |> tap(&IO.write(&1, "0"))
 
-    {:ok, %{device: device}}
+    {:ok, %{device: device, hz: 0}}
   end
 
   def terminate(reason, state) do
@@ -48,6 +53,10 @@ defmodule Raspimouse2Ex.Devices.Buzzer do
       _ -> raise BadArityError
     end
 
-    {:reply, :ok, state}
+    {:reply, :ok, %{state | hz: hz}}
+  end
+
+  def handle_call(:get_tone, _from, state) do
+    {:reply, state.hz, state}
   end
 end

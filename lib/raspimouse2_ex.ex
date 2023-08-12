@@ -22,4 +22,9 @@ defmodule Raspimouse2Ex do
   def get_light_sensors_values() do
     Raspimouse2Ex.Devices.LightSensors.get_values()
   end
+
+  @spec get_buzzer_tone() :: integer()
+  def get_buzzer_tone() do
+    Raspimouse2Ex.Devices.Buzzer.get_tone()
+  end
 end
