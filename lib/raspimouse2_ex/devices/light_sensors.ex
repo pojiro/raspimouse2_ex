@@ -35,7 +35,7 @@ defmodule Raspimouse2Ex.Devices.LightSensors do
   end
 
   def terminate(reason, _state) do
-    Logger.error("#{__MODULE__}: terminated by #{reason}.")
+    Logger.error("#{__MODULE__}: terminated by #{inspect(reason)}.")
   end
 
   def handle_info(:sense, state) do

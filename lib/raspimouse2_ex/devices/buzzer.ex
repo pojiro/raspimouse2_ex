@@ -34,7 +34,7 @@ defmodule Raspimouse2Ex.Devices.Buzzer do
   end
 
   def terminate(reason, state) do
-    Logger.error("#{__MODULE__}: terminated by #{reason}.")
+    Logger.error("#{__MODULE__}: terminated by #{inspect(reason)}.")
 
     IO.write(state.device, "0")
     File.close(state.device)
