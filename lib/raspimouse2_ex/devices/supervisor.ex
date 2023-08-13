@@ -3,6 +3,7 @@ defmodule Raspimouse2Ex.Devices.Supervisor do
 
   alias Raspimouse2Ex.Devices.Buzzer
   alias Raspimouse2Ex.Devices.Motor
+  alias Raspimouse2Ex.Devices.MotorEnablerAgent
   alias Raspimouse2Ex.Devices.MotorEnabler
   alias Raspimouse2Ex.Devices.LightSensors
 
@@ -16,6 +17,7 @@ defmodule Raspimouse2Ex.Devices.Supervisor do
       {Buzzer, [device_file_path: "/dev/rtbuzzer0"]},
       motor(:motor_l, "/dev/rtmotor_raw_l0", -1),
       motor(:motor_r, "/dev/rtmotor_raw_r0", 1),
+      {MotorEnablerAgent, []},
       {MotorEnabler, [device_file_path: "/dev/rtmotoren0"]},
       {LightSensors, [device_file_path: "/dev/rtlightsensor0"]}
     ]

@@ -3,6 +3,8 @@ defmodule Raspimouse2Ex.Devices.MotorEnabler do
 
   require Logger
 
+  alias Raspimouse2Ex.Devices.MotorEnablerAgent
+
   @timeout_ms 10_000
 
   # api
@@ -23,7 +25,7 @@ defmodule Raspimouse2Ex.Devices.MotorEnabler do
 
   @spec enable?() :: boolean()
   def enable?() do
-    GenServer.call(__MODULE__, :enable?)
+    MotorEnablerAgent.get()
   end
 
   # callbacks
@@ -40,35 +42,37 @@ defmodule Raspimouse2Ex.Devices.MotorEnabler do
       else
         File.open!(dev_null, [:write])
       end
-      |> tap(&IO.write(&1, "0"))
 
-    {:ok, %{device: device, enable?: false}}
+    IO.write(device, "0")
+    MotorEnablerAgent.set(false)
+
+    {:ok, %{device: device}}
   end
 
   def terminate(reason, state) do
     Logger.error("#{__MODULE__}: terminated by #{inspect(reason)}.")
 
     IO.write(state.device, "0")
+    MotorEnablerAgent.set(false)
     File.close(state.device)
   end
 
   def handle_call(:enable, _from, state) do
     IO.write(state.device, "1")
-    {:reply, :ok, %{state | enable?: true}, @timeout_ms}
+    MotorEnablerAgent.set(true)
+    {:reply, :ok, state, @timeout_ms}
   end
 
   def handle_call(:disable, _from, state) do
     IO.write(state.device, "0")
-    {:reply, :ok, %{state | enable?: false}, @timeout_ms}
-  end
-
-  def handle_call(:enable?, _from, state) do
-    {:reply, state.enable?, state, @timeout_ms}
+    MotorEnablerAgent.set(false)
+    {:reply, :ok, state}
   end
 
   def handle_info(:timeout, state) do
     IO.write(state.device, "0")
+    MotorEnablerAgent.set(false)
     Logger.info("#{__MODULE__}: disabled due to no message received for #{@timeout_ms} ms.")
-    {:noreply, %{state | enable?: false}}
+    {:noreply, state}
   end
 end
