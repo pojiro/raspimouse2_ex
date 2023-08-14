@@ -39,6 +39,7 @@ defmodule Raspimouse2Ex.Devices.Switch do
       case File.read!(state.device_file_path) do
         "0\n" -> true
         "1\n" -> false
+        _ -> false
       end
 
     Process.send_after(self(), :sense, 100)
