@@ -52,8 +52,10 @@ defmodule Raspimouse2Ex.Devices.Motor do
 
   def handle_call({:drive, {x, z}}, _from, %{coeff: coeff} = state) do
     # ref. https://github.com/rt-net/raspimouse2/blob/2bac95b37d32ea28e8db5c83e2b70b8c46f14d79/raspimouse/src/raspimouse_component.cpp#L442-L445
-    velocity = (x + coeff * z * @wheel_tread_meter / 2) / (@wheel_dia_meter / 2)
-    pwm_hz = round(velocity / (2 * :math.pi()) * 400)
+    # リンク先の計算式だと velocity 物理量の単位が正しくないので計算式を修正している
+    # 修正による、指示値 pwm_hz は変更なし
+    velocity = x + coeff * z * @wheel_tread_meter / 2
+    pwm_hz = round(velocity / (@wheel_dia_meter * :math.pi()) * 400)
 
     # ref. https://github.com/rt-net/RaspberryPiMouse#pwm-frequency-for-leftright-motor-driver-output
     with true <- abs(pwm_hz) <= 10000 do
