@@ -19,6 +19,10 @@ defmodule Raspimouse2ExTest do
     assert %{velocity: 0, pwm_hz: 0} = Raspimouse2Ex.get_right_motor_state()
   end
 
+  test "get_switches_values/0" do
+    assert %{switch0: false, switch1: false, switch2: false} = Raspimouse2Ex.get_switches_values()
+  end
+
   test "get_light_sensors_values/0" do
     assert %{fr: 0, r: 0, l: 0, fl: 0} = Raspimouse2Ex.get_light_sensors_values()
   end

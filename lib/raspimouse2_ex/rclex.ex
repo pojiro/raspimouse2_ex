@@ -14,6 +14,11 @@ defmodule Raspimouse2Ex.Rclex do
     GenServer.start_link(__MODULE__, args, name: __MODULE__)
   end
 
+  @spec publish_switches(values :: map()) :: :ok
+  def publish_switches(values) do
+    GenServer.call(__MODULE__, {:publish_switches, values})
+  end
+
   @spec publish_light_sensors(values :: list()) :: :ok
   def publish_light_sensors(values) do
     GenServer.call(__MODULE__, {:publish_light_sensors, values})
@@ -38,6 +43,9 @@ defmodule Raspimouse2Ex.Rclex do
     Rclex.Subscriber.start_subscribing(buzzer_subscriber, context, &buzzer_callback/1)
     Rclex.Subscriber.start_subscribing(velocity_subscriber, context, &velocity_callback/1)
 
+    {:ok, switches_publisher} =
+      Rclex.Node.create_publisher(node, ~c"RaspimouseMsgs.Msg.Switches", ~c"switches")
+
     {:ok, light_sensors_publisher} =
       Rclex.Node.create_publisher(node, ~c"RaspimouseMsgs.Msg.LightSensors", ~c"light_sensors")
 
@@ -45,7 +53,15 @@ defmodule Raspimouse2Ex.Rclex do
      %{
        context: context,
        node: node,
-       jobs: [light_sensors_publisher, leds_subscriber, buzzer_subscriber, velocity_subscriber],
+       jobs: [
+         switches_publisher,
+         light_sensors_publisher,
+         leds_subscriber,
+         buzzer_subscriber,
+         velocity_subscriber
+       ],
+       switches_publisher: switches_publisher,
+       switches_msg: Rclex.Msg.initialize(~c"RaspimouseMsgs.Msg.Switches"),
        light_sensors_publisher: light_sensors_publisher,
        light_sensors_msg: Rclex.Msg.initialize(~c"RaspimouseMsgs.Msg.LightSensors")
      }}
@@ -55,6 +71,16 @@ defmodule Raspimouse2Ex.Rclex do
     Rclex.Node.finish_jobs(state.jobs)
     Rclex.ResourceServer.finish_node(state.node)
     Rclex.shutdown(state.context)
+  end
+
+  def handle_call({:publish_switches, values}, _from, state) do
+    msg_struct = struct(Rclex.RaspimouseMsgs.Msg.Switches, values)
+
+    Rclex.Msg.set(state.switches_msg, msg_struct, ~c"RaspimouseMsgs.Msg.Switches")
+
+    :ok = Rclex.Publisher.publish([state.switches_publisher], [state.switches_msg])
+
+    {:reply, :ok, state}
   end
 
   def handle_call({:publish_light_sensors, values}, _from, state) do
