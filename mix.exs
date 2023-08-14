@@ -22,7 +22,9 @@ defmodule Raspimouse2Ex.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rclex, "~> 0.8.5"}
+      {:rclex,
+       git: "https://github.com/rclex/rclex.git",
+       commit: "60e3d715b31e7497fbfb55bb675bbf4b302d168a"}
     ]
   end
 end
