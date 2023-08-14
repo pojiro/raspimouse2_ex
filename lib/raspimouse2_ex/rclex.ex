@@ -24,12 +24,16 @@ defmodule Raspimouse2Ex.Rclex do
     context = Rclex.rclexinit()
     {:ok, node} = Rclex.ResourceServer.create_node(context, ~c"rclex")
 
+    {:ok, leds_subscriber} =
+      Rclex.Node.create_subscriber(node, ~c"RaspimouseMsgs.Msg.Leds", ~c"leds")
+
     {:ok, buzzer_subscriber} =
       Rclex.Node.create_subscriber(node, ~c"StdMsgs.Msg.Int16", ~c"buzzer")
 
     {:ok, velocity_subscriber} =
       Rclex.Node.create_subscriber(node, ~c"GeometryMsgs.Msg.Twist", ~c"cmd_vel")
 
+    Rclex.Subscriber.start_subscribing(leds_subscriber, context, &leds_callback/1)
     Rclex.Subscriber.start_subscribing(buzzer_subscriber, context, &buzzer_callback/1)
     Rclex.Subscriber.start_subscribing(velocity_subscriber, context, &velocity_callback/1)
 
@@ -68,6 +72,11 @@ defmodule Raspimouse2Ex.Rclex do
     :ok = Rclex.Publisher.publish([state.light_sensors_publisher], [state.light_sensors_msg])
 
     {:reply, :ok, state}
+  end
+
+  defp leds_callback(msg) do
+    recv_msg = Rclex.Msg.read(msg, ~c"RaspimouseMsgs.Msg.Leds")
+    Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
   end
 
   defp buzzer_callback(msg) do
