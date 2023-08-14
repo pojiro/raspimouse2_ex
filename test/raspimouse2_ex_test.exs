@@ -23,6 +23,10 @@ defmodule Raspimouse2ExTest do
     assert %{fr: 0, r: 0, l: 0, fl: 0} = Raspimouse2Ex.get_light_sensors_values()
   end
 
+  test "get_leds_values/0" do
+    assert %{led0: false, led1: false, led2: false, led3: false} = Raspimouse2Ex.get_leds_values()
+  end
+
   test "get_buzzer_tone/0" do
     assert 0 = Raspimouse2Ex.get_buzzer_tone()
   end

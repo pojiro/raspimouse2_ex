@@ -1,4 +1,4 @@
 %{
   "elixir_make": {:hex, :elixir_make, "0.7.7", "7128c60c2476019ed978210c245badf08b03dbec4f24d05790ef791da11aa17c", [:mix], [{:castore, "~> 0.1 or ~> 1.0", [hex: :castore, repo: "hexpm", optional: true]}], "hexpm", "5bc19fff950fad52bbe5f211b12db9ec82c6b34a9647da0c2224b8b8464c7e6c"},
-  "rclex": {:hex, :rclex, "0.8.5", "459489595a59fe178e65196e248fe7677fce031beee5a62eb98dbcfec0f273c2", [:make, :mix], [{:elixir_make, "~> 0.4", [hex: :elixir_make, repo: "hexpm", optional: false]}], "hexpm", "aeb8f693f379cfe9025a4798efe11b5efdfc6ee533c683f5903bfdf2526cacf4"},
+  "rclex": {:git, "https://github.com/rclex/rclex.git", "60e3d715b31e7497fbfb55bb675bbf4b302d168a", []},
 }

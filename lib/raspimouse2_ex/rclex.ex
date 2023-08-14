@@ -3,6 +3,7 @@ defmodule Raspimouse2Ex.Rclex do
 
   require Logger
 
+  alias Raspimouse2Ex.Devices.Led
   alias Raspimouse2Ex.Devices.Buzzer
   alias Raspimouse2Ex.Devices.Motor
   alias Raspimouse2Ex.Devices.MotorEnabler
@@ -44,7 +45,7 @@ defmodule Raspimouse2Ex.Rclex do
      %{
        context: context,
        node: node,
-       jobs: [light_sensors_publisher, buzzer_subscriber, velocity_subscriber],
+       jobs: [light_sensors_publisher, leds_subscriber, buzzer_subscriber, velocity_subscriber],
        light_sensors_publisher: light_sensors_publisher,
        light_sensors_msg: Rclex.Msg.initialize(~c"RaspimouseMsgs.Msg.LightSensors")
      }}
@@ -77,6 +78,11 @@ defmodule Raspimouse2Ex.Rclex do
   defp leds_callback(msg) do
     recv_msg = Rclex.Msg.read(msg, ~c"RaspimouseMsgs.Msg.Leds")
     Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
+
+    Task.start_link(fn -> :ok = Led.drive(:led0, recv_msg) end)
+    Task.start_link(fn -> :ok = Led.drive(:led1, recv_msg) end)
+    Task.start_link(fn -> :ok = Led.drive(:led2, recv_msg) end)
+    Task.start_link(fn -> :ok = Led.drive(:led3, recv_msg) end)
   end
 
   defp buzzer_callback(msg) do
