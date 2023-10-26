@@ -8,6 +8,8 @@ defmodule Raspimouse2Ex.Rclex do
   alias Raspimouse2Ex.Devices.Motor
   alias Raspimouse2Ex.Devices.MotorEnabler
 
+  alias Rclex.Pkgs.{RaspimouseMsgs, StdMsgs, GeometryMsgs}
+
   # api
 
   def start_link(args) do
@@ -27,58 +29,33 @@ defmodule Raspimouse2Ex.Rclex do
   # callbacks
 
   def init(_args) do
-    context = Rclex.rclexinit()
-    {:ok, node} = Rclex.ResourceServer.create_node(context, ~c"rclex")
+    :ok = Rclex.start_node("rclex")
 
-    {:ok, leds_subscriber} =
-      Rclex.Node.create_subscriber(node, ~c"RaspimouseMsgs.Msg.Leds", ~c"leds")
+    :ok =
+      Rclex.start_subscription(&leds_callback/1, RaspimouseMsgs.Msg.Leds, "/leds", "rclex")
 
-    {:ok, buzzer_subscriber} =
-      Rclex.Node.create_subscriber(node, ~c"StdMsgs.Msg.Int16", ~c"buzzer")
+    :ok =
+      Rclex.start_subscription(&buzzer_callback/1, StdMsgs.Msg.Int16, "/buzzer", "rclex")
 
-    {:ok, velocity_subscriber} =
-      Rclex.Node.create_subscriber(node, ~c"GeometryMsgs.Msg.Twist", ~c"cmd_vel")
+    :ok =
+      Rclex.start_subscription(&velocity_callback/1, GeometryMsgs.Msg.Twist, "/cmd_vel", "rclex")
 
-    Rclex.Subscriber.start_subscribing(leds_subscriber, context, &leds_callback/1)
-    Rclex.Subscriber.start_subscribing(buzzer_subscriber, context, &buzzer_callback/1)
-    Rclex.Subscriber.start_subscribing(velocity_subscriber, context, &velocity_callback/1)
+    :ok =
+      Rclex.start_publisher(RaspimouseMsgs.Msg.Switches, "/switches", "rclex")
 
-    {:ok, switches_publisher} =
-      Rclex.Node.create_publisher(node, ~c"RaspimouseMsgs.Msg.Switches", ~c"switches")
+    :ok =
+      Rclex.start_publisher(RaspimouseMsgs.Msg.LightSensors, "/light_sensors", "rclex")
 
-    {:ok, light_sensors_publisher} =
-      Rclex.Node.create_publisher(node, ~c"RaspimouseMsgs.Msg.LightSensors", ~c"light_sensors")
-
-    {:ok,
-     %{
-       context: context,
-       node: node,
-       jobs: [
-         switches_publisher,
-         light_sensors_publisher,
-         leds_subscriber,
-         buzzer_subscriber,
-         velocity_subscriber
-       ],
-       switches_publisher: switches_publisher,
-       switches_msg: Rclex.Msg.initialize(~c"RaspimouseMsgs.Msg.Switches"),
-       light_sensors_publisher: light_sensors_publisher,
-       light_sensors_msg: Rclex.Msg.initialize(~c"RaspimouseMsgs.Msg.LightSensors")
-     }}
+    {:ok, %{}}
   end
 
-  def terminate(_reason, state) do
-    Rclex.Node.finish_jobs(state.jobs)
-    Rclex.ResourceServer.finish_node(state.node)
-    Rclex.shutdown(state.context)
+  def terminate(_reason, _state) do
   end
 
   def handle_call({:publish_switches, values}, _from, state) do
-    msg_struct = struct(Rclex.RaspimouseMsgs.Msg.Switches, values)
+    msg_struct = struct(RaspimouseMsgs.Msg.Switches, values)
 
-    Rclex.Msg.set(state.switches_msg, msg_struct, ~c"RaspimouseMsgs.Msg.Switches")
-
-    :ok = Rclex.Publisher.publish([state.switches_publisher], [state.switches_msg])
+    :ok = Rclex.publish(msg_struct, "/switches", "rclex")
 
     {:reply, :ok, state}
   end
@@ -87,44 +64,39 @@ defmodule Raspimouse2Ex.Rclex do
     [forward_r, right, left, forward_l] = values
 
     msg_struct =
-      struct(Rclex.RaspimouseMsgs.Msg.LightSensors, %{
+      struct(RaspimouseMsgs.Msg.LightSensors, %{
         forward_r: forward_r,
         forward_l: forward_l,
         left: left,
         right: right
       })
 
-    Rclex.Msg.set(state.light_sensors_msg, msg_struct, ~c"RaspimouseMsgs.Msg.LightSensors")
-
-    :ok = Rclex.Publisher.publish([state.light_sensors_publisher], [state.light_sensors_msg])
+    :ok = Rclex.publish(msg_struct, "/light_sensors", "rclex")
 
     {:reply, :ok, state}
   end
 
   defp leds_callback(msg) do
-    recv_msg = Rclex.Msg.read(msg, ~c"RaspimouseMsgs.Msg.Leds")
-    Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
+    Logger.debug("#{__MODULE__} receive msg: #{inspect(msg)}")
 
-    Task.start_link(fn -> :ok = Led.drive(:led0, recv_msg) end)
-    Task.start_link(fn -> :ok = Led.drive(:led1, recv_msg) end)
-    Task.start_link(fn -> :ok = Led.drive(:led2, recv_msg) end)
-    Task.start_link(fn -> :ok = Led.drive(:led3, recv_msg) end)
+    Task.start_link(fn -> :ok = Led.drive(:led0, msg) end)
+    Task.start_link(fn -> :ok = Led.drive(:led1, msg) end)
+    Task.start_link(fn -> :ok = Led.drive(:led2, msg) end)
+    Task.start_link(fn -> :ok = Led.drive(:led3, msg) end)
   end
 
   defp buzzer_callback(msg) do
-    recv_msg = Rclex.Msg.read(msg, ~c"StdMsgs.Msg.Int16")
-    Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
+    Logger.debug("#{__MODULE__} receive msg: #{inspect(msg)}")
 
-    :ok = Buzzer.beep(recv_msg)
+    :ok = Buzzer.beep(msg)
   end
 
   defp velocity_callback(msg) do
-    recv_msg = Rclex.Msg.read(msg, ~c"GeometryMsgs.Msg.Twist")
-    Logger.debug("#{__MODULE__} receive msg: #{inspect(recv_msg)}")
+    Logger.debug("#{__MODULE__} receive msg: #{inspect(msg)}")
 
     :ok = MotorEnabler.enable()
 
-    Task.start_link(fn -> :ok = Motor.drive(:motor_l, recv_msg) end)
-    Task.start_link(fn -> :ok = Motor.drive(:motor_r, recv_msg) end)
+    Task.start_link(fn -> :ok = Motor.drive(:motor_l, msg) end)
+    Task.start_link(fn -> :ok = Motor.drive(:motor_r, msg) end)
   end
 end
