@@ -22,7 +22,7 @@ defmodule Raspimouse2Ex.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:rclex, "== 0.9.0"}
+      {:rclex, "~> 0.12.0"}
     ]
   end
 end
