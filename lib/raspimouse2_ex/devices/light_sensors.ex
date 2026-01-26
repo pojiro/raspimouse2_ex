@@ -29,7 +29,7 @@ defmodule Raspimouse2Ex.Devices.LightSensors do
         dev_null
       end
 
-    send(self(), :sense)
+    Process.send_after(self(), :sense, 100)
 
     {:ok, %{device_file_path: device_file_path, values: %{fr: 0, r: 0, l: 0, fl: 0}}}
   end

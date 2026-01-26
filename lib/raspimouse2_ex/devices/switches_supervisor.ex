@@ -16,7 +16,7 @@ defmodule Raspimouse2Ex.Devices.Switches do
   def init(_args) do
     Process.flag(:trap_exit, true)
 
-    send(self(), :sense)
+    Process.send_after(self(), :sense, 100)
 
     {:ok, %{values: %{switch0: false, switch1: false, switch2: false}}}
   end
