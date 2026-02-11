@@ -38,7 +38,12 @@ defmodule Raspimouse2Ex.Rclex do
       Rclex.start_subscription(&buzzer_callback/1, StdMsgs.Msg.Int16, "/buzzer", "rclex")
 
     :ok =
-      Rclex.start_subscription(&velocity_callback/1, GeometryMsgs.Msg.Twist, "/cmd_vel", "rclex")
+      Rclex.start_subscription(
+        &velocity_callback/1,
+        GeometryMsgs.Msg.TwistStamped,
+        "/cmd_vel",
+        "rclex"
+      )
 
     :ok =
       Rclex.start_publisher(RaspimouseMsgs.Msg.Switches, "/switches", "rclex")
@@ -96,7 +101,7 @@ defmodule Raspimouse2Ex.Rclex do
 
     :ok = MotorEnabler.enable()
 
-    Task.start_link(fn -> :ok = Motor.drive(:motor_l, msg) end)
-    Task.start_link(fn -> :ok = Motor.drive(:motor_r, msg) end)
+    Task.start_link(fn -> :ok = Motor.drive(:motor_l, msg.twist) end)
+    Task.start_link(fn -> :ok = Motor.drive(:motor_r, msg.twist) end)
   end
 end
